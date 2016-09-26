@@ -1,0 +1,21 @@
+#kivy 1.0
+<OSXGuiWidget>
+    canvas:
+        Color:
+            rgba: .5, .5, .5, .5
+        Ellipse:
+            size: self.size
+            pos: self.pos
+<RootWidget>:
+    TabbedPanel:
+        width: 450.0
+        do_default_tab: False
+        TabbedPanelItem:
+            text: 'Main'
+            BoxLayout:
+                Button:
+                    text: '시작'
+                Button:
+                    text: '시작'
+                Button:
+                    text: '시작'
