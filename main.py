@@ -13,48 +13,37 @@ from kivy import require
 # This example uses features introduced in Kivy 1.8.0, namely being able to load
 # custom json files from the app folder
 require("1.8.0")
-Builder.load_string('''
-<PressedScreen>:
-	
-	BoxLayout:
-
-		orientation: 'vertical'
-		padding: 20
-		spacing: 100
-		Button:
-			text: "Game Start"
-			pos_hint: {'x':.25, 'y': 0.5}		
-			size_hint: 0.5, 0.5
-		Button:
-			text: "My info"
-			pos_hint: {'x':0.4, 'y': 0.1}
-			size_hint: 0.2, 0.1
-		Button:
-			text: "Friends"
-			pos_hint: {'x':0.4, 'y': 0.1}
-			size_hint: 0.2, 0.1
-			on_release: root.manager.current = "mode"
-			
-<FirstScreen>:	
-	FloatLayout:	
-
-		Button:
-			text: "Button 3"
-			pos_hint: {'x': .8, 'y': .6}
-			size_hint: .2, .2
-			on_release: root.next()
-
-''')
-
+Builder.load_file('FriendsScreen.kv')
+Builder.load_file('MainScreen.kv')
+Builder.load_file('GameStartScreen.kv')
+Builder.load_file('MyinfoScreen.kv')
 		
-class FirstScreen(Screen):
-	def next(self):
-		self.manager.current = "MainScreen"
+class FriendsScreen(Screen):
+    def back(self):
+        self.manager.current = "MainScreen"
 
 
-class PressedScreen(Screen):
-	def __init__(self, **kwargs):
-		super(PressedScreen, self).__init__(**kwargs)
+class MainScreen(Screen):
+    def __init__(self, **kwargs):
+        super(MainScreen, self).__init__(**kwargs)
+    def FriendsButton(self):
+        self.manager.current = "FriendsScreen"
+    def GamestartButton(self):
+        self.manager.current = "GameStartScreen"
+    def MyinfoButton(self):
+        self.manager.current = "MyinfoScreen"
+
+class GameStartScreen(Screen):
+    def __init__(self, **kwargs):
+        super(GameStartScreen, self).__init__(**kwargs)
+    def back(self):
+        self.manager.current = "MainScreen"
+        
+class MyinfoScreen(Screen):
+    def __init__(self, **kwargs):
+        super(MyinfoScreen, self).__init__(**kwargs)
+    def back(self):
+        self.manager.current = "MainScreen"
         
 
 class TestDemo(App):
@@ -62,10 +51,14 @@ class TestDemo(App):
 
     def build(self):
         self.sm = ScreenManager()        
-        self.sm.add_widget(PressedScreen(name="MainScreen"))
-        self.sm.add_widget(FirstScreen(name="mode"))
+        self.sm.add_widget(MainScreen(name="MainScreen"))
+        self.sm.add_widget(FriendsScreen(name="FriendsScreen"))
+        self.sm.add_widget(GameStartScreen(name="GameStartScreen"))
+        self.sm.add_widget(MyinfoScreen(name="MyinfoScreen"))
         self.sm.current = "MainScreen"
         return self.sm
 
 if __name__ == "__main__":
     TestDemo().run()
+
+	
