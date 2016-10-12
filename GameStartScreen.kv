@@ -2,11 +2,22 @@
 
 <GameStartScreen>:	
 	FloatLayout:	
-        Label:            
-            text: 'Searching  Opponents'
+        Label:       
+            id:outputtext
+            text: app.labeltext
+            
 		Button:
 			text: "Back"
 			pos_hint: {'x':.45, 'y': 0}		
 			size_hint: 0.1, 0.1
 			on_release: root.back()
-
+        Button:
+			text: "1?"
+			pos_hint: {'x':.25, 'y': .5}		
+			size_hint: 0.1, 0.1
+			on_release: app.test()
+        Button:
+			text: "2?"
+			pos_hint: {'x':.65, 'y': .5}		
+			size_hint: 0.1, 0.1
+			on_release: app.test2()
