@@ -99,7 +99,6 @@ class TestDemo(App):
     def fuck(self):
         self.recv_stream,self.send_stream = get_socket_stream('linvor')
         self.th.start()
-        self.th.join()
     def test(self):
         self.send_stream.write('hi.\n')
         self.send_stream.flush()
