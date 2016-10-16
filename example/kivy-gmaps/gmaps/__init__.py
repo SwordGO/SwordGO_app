@@ -112,17 +112,17 @@ class GoogleMapEventListener(PythonJavaClass):
     def onMarkerClick(self, marker):
         return self.listener.dispatch('on_marker_click', marker)
 
-    @java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
-    def onMarkerDrag(self, marker):
-        self.listener.dispatch('on_marker_drag', marker)
+    #@java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
+    #def onMarkerDrag(self, marker):
+    #    self.listener.dispatch('on_marker_drag', marker)
 
-    @java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
-    def onMarkerDragEnd(self, marker):
-        self.listener.dispatch('on_marker_drag_end', marker)
+    #@java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
+    #def onMarkerDragEnd(self, marker):
+    #    self.listener.dispatch('on_marker_drag_end', marker)
 
-    @java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
-    def onMarkerDragStart(self, marker):
-        self.listener.dispatch('on_marker_drag_start', marker)
+    #@java_method('(Lcom/google/android/gms/maps/model/Marker;)V')
+    #def onMarkerDragStart(self, marker):
+    #    self.listener.dispatch('on_marker_drag_start', marker)
 
     @java_method('()Z')
     def onMyLocationButtonClick(self):
@@ -250,9 +250,9 @@ class GMap(Widget):
         'on_map_loaded',
         'on_map_long_click',
         'on_marker_click',
-        'on_marker_drag',
-        'on_marker_drag_end',
-        'on_marker_drag_start',
+        #'on_marker_drag',
+        #'on_marker_drag_end',
+        #'on_marker_drag_start',
         'on_my_location_button_click',
         'on_my_location_change',
         
@@ -310,7 +310,7 @@ class GMap(Widget):
         gmap.setOnMapClickListener(listener)
         gmap.setOnMapLongClickListener(listener)
         gmap.setOnMarkerClickListener(listener)
-        gmap.setOnMarkerDragListener(listener)
+        #gmap.setOnMarkerDragListener(listener)
         gmap.setOnMyLocationButtonClickListener(listener)
         gmap.setOnMyLocationChangeListener(listener)
 
@@ -370,12 +370,12 @@ class GMap(Widget):
         lineOpts.geodesic(geodesic)
         return lineOpts
 
-    def create_circle(self, coords, radius = 10000, strokeColor = Color.RED, fillColor = Color.BLUE):
+    def create_circle(self, coord, radius = 10000, strokeColor = Color.RED, fillColor = Color.BLUE):
 	circleOpts = CircleOptions()
-        circleOpts.center(*coords)
         circleOpts.radius(radius)
         circleOpts.strokColor(strokColor)
         circleOpts.fillColor(fillColor)
+        circleOpts.center(coord)
         return circleOpts
 
     #
@@ -406,17 +406,17 @@ class GMap(Widget):
         Logger.info('Gmap: on_marker_click)')
         pass
 
-    def on_marker_drag(self, marker):
-        Logger.info('Gmap: on_marker_drag)')
-        pass
+    #def on_marker_drag(self, marker):
+    #    Logger.info('Gmap: on_marker_drag)')
+    #    pass
 
-    def on_marker_drag_end(self, marker):
-        Logger.info('Gmap: on_marker_drag_end)')
-        pass
+    #def on_marker_drag_end(self, marker):
+    #    Logger.info('Gmap: on_marker_drag_end)')
+    #    pass
 
-    def on_marker_drag_start(self, marker):
-        Logger.info('Gmap: on_marker_drag_start)')
-        pass
+    #def on_marker_drag_start(self, marker):
+    #    Logger.info('Gmap: on_marker_drag_start)')
+    #    pass
 
     def on_my_location_button_click(self):
         Logger.info('Gmap: on_my_location_button_click)')

@@ -65,7 +65,7 @@ class GMapTestApp(App):
         map.moveCamera(map_widget.camera_update_factory.newLatLngZoom(
             sydney, 13))
 
-        marker = map_widget.create_marker(
+        marker = self.map_widget.create_marker(
                 title='Sydney',
                 snippet='The most populous city in Autralia',
                 position=sydney)
@@ -91,6 +91,8 @@ class GMapTestApp(App):
         self.map_widget.map.moveCamera(
             self.map_widget.camera_update_factory.newLatLngZoom(
                 latlng, 13))
+        circle = self.map_widget.create_circle( latlng)
+        self.map_widget.map.addCircle(circle)
 
     def on_map_click(self, map_widget, latlng):
         self.latitude = latlng.latitude
