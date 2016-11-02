@@ -21,8 +21,6 @@ Builder.load_file('FriendsScreen.kv')
 Builder.load_file('MainScreen.kv')
 Builder.load_file('GameStartScreen.kv')
 Builder.load_file('MyinfoScreen.kv')
-<<<<<<< HEAD
-=======
 
 InputStreamReader = autoclass('java.io.InputStreamReader')
 BufferedReader = autoclass('java.io.BufferedReader')
@@ -46,8 +44,6 @@ def get_socket_stream(name):
     socket.connect()
     return recv_stream, send_stream
 
-
->>>>>>> ff5faa20450609e84d2580970788e52abc646050
 		
 class FriendsScreen(Screen):
     def back(self):
@@ -69,18 +65,6 @@ class GameStartScreen(Screen):
         super(GameStartScreen, self).__init__(**kwargs)
     def back(self):
         self.manager.current = "MainScreen"
-<<<<<<< HEAD
-        
-class MyinfoScreen(Screen):
-    def __init__(self, **kwargs):
-        super(MyinfoScreen, self).__init__(**kwargs)
-    def back(self):
-        self.manager.current = "MainScreen"
-=======
-    
-        
-            
->>>>>>> ff5faa20450609e84d2580970788e52abc646050
         
 class MyinfoScreen(Screen):
     def __init__(self, **kwargs):
@@ -131,10 +115,3 @@ class TestDemo(App):
         
 if __name__ == "__main__":
     TestDemo().run()
-
-<<<<<<< HEAD
-	
-=======
-	
-
->>>>>>> ff5faa20450609e84d2580970788e52abc646050
