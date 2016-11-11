@@ -1,0 +1,21 @@
+#:kivy 1.0
+
+<mapview>:
+	
+	BoxLayout:
+
+		orientation: 'horizontal'
+		#padding: 20
+		#spacing: 100		
+		Button:
+			text: "g"			
+			size_hint: 1.0, 1.0
+            on_release: app.start(1000, 0)
+		Button:
+			text: "s"			
+			size_hint: 1.0, 1.0
+			on_release: app.makemark()
+        Label:
+            text: app.gps_location
+        Label:
+            text: app.gps_status
