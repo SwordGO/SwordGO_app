@@ -36,7 +36,7 @@ version = 0.1
 
 # (list) Application requirements
 # comma seperated e.g. requirements = sqlite3,kivy
-requirements = kivy,openssl,futures,requests
+requirements = kivy,openssl,futures,requests,plyer
 
 # (str) Custom source folders for requirements
 # Sets custom source for any requirements with recipes
@@ -73,7 +73,7 @@ fullscreen = 1
 
 # (list) Permissions
 
-android.permissions = INTERNET,BLUETOOTH, BLUETOOTH_ADMIN
+android.permissions = INTERNET,ACCESS_FINE_LOCATION,ACCESS_COARSE_LOCATION
 
 # (int) Android API to use
 #android.api = 19
