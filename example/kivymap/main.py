@@ -10,10 +10,16 @@ from kivy.uix.bubble import Bubble
 from kivy.clock import Clock, mainthread
 from plyer import gps
 import requests
+from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.label import Label
+
+Label.font_name = "NotoSansCJKkr-Regular.otf"
+
 url = "http://build.ees.guru:8888"
 api_url = url+"/mines"
 user_url = url+"/user"
 markerlist = []
+GL_USER = 1
 class MapMark(MapMarkerPopup):
     def remove_open_status(self):
         if self.is_open and self.placeholder.parent:
@@ -71,27 +77,35 @@ MapMark:
                 markup: True
                 halign: "center"
 '''
-    
+
+class MapViewBackground(FloatLayout):
+    pass
 class MapViewApp(App):
+    root = None
     gps_location = StringProperty()
     gps_status = StringProperty('Click Start to get GPS location updates')
     error = StringProperty("ERRRRRRRRRRRRRRRRRRRRROOOOOOOOORRRRRR")
     mapview = None
     def build(self):
+        self.root = MapViewBackground()
         gps.configure(on_location=self.on_location,on_status=self.on_status)
-        #self.root.add_widget(Builder.load_file('buttons.kv'))
-        self.mapview = MapViewer(zoom=15, lat=37.4251096, lon=127.4250295)
-        #self.mapview = MapView(zoom=15, lat=50.6494,lon=3.05)
-        #gps.start(1000, 0)
-        #b=MapMark(lat=50.6494,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker2.png")
-        #b.add_widget(bubble())
-        #c=MapMark(lat=50.6294,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker3.png")
-        #d = Builder.load_string(marker_loader%{"lat":50.6194,"lon":3.057,"source":"1"})
-        #self.mapview.add_widget(d)
-        #self.mapview.add_widget(MapMark(lat=50.6394,lon=3.057,popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
-        #self.mapview.add_widget(b)
-        #self.mapview.add_widget(c)
-        return self.mapview
+        self.mapview = self.root.ids.mv
+        response = requests.get(api_url,"")
+            
+        for i in response.json():
+            global markerlist
+            #print "id = %s\tlat,lon = %s,%s\tHP = %s"%(l['idmine'],l['lat'],l['lon'],l['hp'])
+            user_id = requests.get(user_url+"/%(user)s/test"%i,"")
+            user_id = user_id.json()
+            #status2 = user_id.json()['state']
+            #if status2 == "FAIL" : 
+            #    return
+            
+            
+            _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
+            self.mapview.add_widget(_widget)
+            markerlist.append(_widget)
+        return self.root
     
     def start(self, minTime, minDistance):
         gps.start(minTime, minDistance)
@@ -133,5 +147,24 @@ class MapViewApp(App):
                 markerlist.append(_widget)
                 #self.mapview.add_widget(MapMark(lat=i['lat'],lon=i['lon'] ,   popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
         except Exception as e:        
-            self.error = str(e)
+            self.error = "                     "+str(e)
+            
+    def makemark2(self):
+        try:
+            response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")
+            response = response.json()
+            if not response:
+                response = requests.post(api_url+"/%(lat)f/%(lon)f/test"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")        
+                status = response.json()['state']
+                if status == "FAIL" : 
+                    return
+                user_id = requests.get(user_url+"/%d/test"%GL_USER,"")
+                user_id = user_id.json()
+                _widget = Builder.load_string(marker_loader%{"lat":self.mapview.lat,"lon":self.mapview.lon,"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
+                self.mapview.add_widget(_widget)
+                markerlist.append(_widget)
+            else :
+                self.root.popup.open()
+        except Exception as e:        
+                self.error = "                     "+str(e)
 MapViewApp().run()

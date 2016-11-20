@@ -1,21 +1,46 @@
 #:kivy 1.0
+#:import sys sys
+#:import MapSource mapview.MapSource
+#:import MapView mapview
 
-<mapview>:
-	
-	BoxLayout:
+<MapViewBackground>:
+    popup: popup.__self__
+    MapViewer:
+        id: mv
+        zoom: 20
+        lat: 37.4251096
+        lon: 127.4250295
+    FloatLayout:
+        size_hint: .5, 0.2
+        BoxLayout:
+            orientation: 'vertical'	
+            id:bl
+            Button:
+                text: "g"			
+                size_hint: 1.0, 1.0
+                on_release: app.start(1000, 0)
+            Button:
+                text: "s"			
+                size_hint: 1.0, 1.0
+                on_release: app.makemark()
+            
+            Label:
+                text: app.gps_location
+            Label:
+                text: app.gps_status
+            Label:
+                text: app.error
 
-		orientation: 'horizontal'
-		#padding: 20
-		#spacing: 100		
-		Button:
-			text: "g"			
-			size_hint: 1.0, 1.0
-            on_release: app.start(1000, 0)
-		Button:
-			text: "s"			
-			size_hint: 1.0, 1.0
-			on_release: app.makemark()
-        Label:
-            text: app.gps_location
-        Label:
-            text: app.gps_status
+            Popup:
+                id: popup
+                title: "NOP"
+                size_hint: (0.5, 0.5)
+                on_parent:
+                    if self.parent == bl: self.parent.remove_widget(self)
+                Button:
+                    text: 'nop nop nop'
+                    on_release: popup.dismiss()
+                
+            Button:
+                text: 'make this shit'
+                on_release: app.makemark2()
