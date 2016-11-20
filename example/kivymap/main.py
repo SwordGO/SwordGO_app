@@ -12,6 +12,7 @@ from plyer import gps
 import requests
 url = "http://build.ees.guru:8888"
 api_url = url+"/mines"
+user_url = url+"/user"
 markerlist = []
 class MapMark(MapMarkerPopup):
     def remove_open_status(self):
@@ -66,7 +67,7 @@ MapMark:
                 source: "http://upload.wikimedia.org/wikipedia/commons/9/9d/France-Lille-VieilleBourse-FacadeGrandPlace.jpg"
                 mipmap: True
             Label:
-                text: "[b]Lille[/b]\\n1 154 861 hab\\n5 759 hab./km2"
+                text: "[b]%(user_name)s[/b]%(team_name)s"
                 markup: True
                 halign: "center"
 '''
@@ -74,6 +75,7 @@ MapMark:
 class MapViewApp(App):
     gps_location = StringProperty()
     gps_status = StringProperty('Click Start to get GPS location updates')
+    error = StringProperty("ERRRRRRRRRRRRRRRRRRRRROOOOOOOOORRRRRR")
     mapview = None
     def build(self):
         gps.configure(on_location=self.on_location,on_status=self.on_status)
@@ -81,14 +83,14 @@ class MapViewApp(App):
         self.mapview = MapViewer(zoom=15, lat=37.4251096, lon=127.4250295)
         #self.mapview = MapView(zoom=15, lat=50.6494,lon=3.05)
         #gps.start(1000, 0)
-        b=MapMark(lat=50.6494,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker2.png")
+        #b=MapMark(lat=50.6494,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker2.png")
         #b.add_widget(bubble())
-        c=MapMark(lat=50.6294,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker3.png")
-        d = Builder.load_string(marker_loader%{"lat":50.6194,"lon":3.057,"source":1})
-        self.mapview.add_widget(d)
-        self.mapview.add_widget(MapMark(lat=50.6394,lon=3.057,popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
-        self.mapview.add_widget(b)
-        self.mapview.add_widget(c)
+        #c=MapMark(lat=50.6294,lon=3.057,popup_size= (dp(230), dp(130)),source = "icons/marker3.png")
+        #d = Builder.load_string(marker_loader%{"lat":50.6194,"lon":3.057,"source":"1"})
+        #self.mapview.add_widget(d)
+        #self.mapview.add_widget(MapMark(lat=50.6394,lon=3.057,popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
+        #self.mapview.add_widget(b)
+        #self.mapview.add_widget(c)
         return self.mapview
     
     def start(self, minTime, minDistance):
@@ -109,17 +111,27 @@ class MapViewApp(App):
         self.gps_status = 'type={}\n{}'.format(stype, status)
     
     def makemark(self):
-        response = requests.post(api_url+"/%(lat)f/%(lon)f/test"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")        
-        status = response.json()['state']
-        if status == "FAIL" : 
-            return
-        response = requests.get(api_url,"")
-        for i in response.json():
-            global markerlist
-            #print "id = %s\tlat,lon = %s,%s\tHP = %s"%(l['idmine'],l['lat'],l['lon'],l['hp'])
-            _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":2})
-            self.mapview.add_widget(_widget)
-            markerlist.append(_widget)
-            #self.mapview.add_widget(MapMark(lat=i['lat'],lon=i['lon'] ,   popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
-        
+        try:
+            response = requests.post(api_url+"/%(lat)f/%(lon)f/test"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")        
+            status = response.json()['state']
+            if status == "FAIL" : 
+                return
+            response = requests.get(api_url,"")
+            
+            for i in response.json():
+                global markerlist
+                #print "id = %s\tlat,lon = %s,%s\tHP = %s"%(l['idmine'],l['lat'],l['lon'],l['hp'])
+                user_id = requests.get(user_url+"/%(user)s/test"%i,"")
+                user_id = user_id.json()
+                #status2 = user_id.json()['state']
+                #if status2 == "FAIL" : 
+                #    return
+                
+                
+                _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
+                self.mapview.add_widget(_widget)
+                markerlist.append(_widget)
+                #self.mapview.add_widget(MapMark(lat=i['lat'],lon=i['lon'] ,   popup_size= (dp(230), dp(130)),source ="icons/marker1.png" ))
+        except Exception as e:        
+            self.error = str(e)
 MapViewApp().run()
