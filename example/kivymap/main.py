@@ -18,6 +18,7 @@ Label.font_name = "NotoSansCJKkr-Regular.otf"
 url = "http://build.ees.guru:8888"
 api_url = url+"/mines"
 user_url = url+"/user"
+inven_url = url+"/inven"
 markerlist = []
 GL_USER = 1
 class MapMark(MapMarkerPopup):
@@ -86,12 +87,19 @@ class MapViewApp(App):
     gps_status = StringProperty('Click Start to get GPS location updates')
     error = StringProperty("ERRRRRRRRRRRRRRRRRRRRROOOOOOOOORRRRRR")
     mapview = None
+    
+    mineral_cobble = NumericProperty()
+    mineral_col = NumericProperty()
+    mineral_steel = NumericProperty()
+    mineral_gold = NumericProperty()
+    
     def build(self):
         try:
             self.root = MapViewBackground()
             gps.configure(on_location=self.on_location,on_status=self.on_status)
             self.mapview = self.root.ids.mv
-            response = requests.get(api_url,"")
+            response = requests.get(api_url,"")        
+
                 
             for i in response.json():
                 global markerlist
@@ -106,6 +114,11 @@ class MapViewApp(App):
                 _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
                 self.mapview.add_widget(_widget)
                 markerlist.append(_widget)
+            inven_respone = requests.get(inven_url+"/%d/test"%GL_USER,"")
+            self.mineral_cobble = inven_respone.json()[0]['cob']
+            self.mineral_col = inven_respone.json()[0]['col']
+            self.mineral_steel = inven_respone.json()[0]['steel']
+            self.mineral_gold = inven_respone.json()[0]['gold']
             self.start(1000,0)
         except Exception as e:        
             self.error = "                             "+str(e)

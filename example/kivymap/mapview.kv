@@ -7,9 +7,37 @@
     popup: popup.__self__
     MapViewer:
         id: mv
-        zoom: 20
+        zoom: 15
         lat: 37.4251096
         lon: 127.4250295
+    FloatLayout:
+        size_hint: 0.8,1.9
+        Image:
+            source: "icons/cobble.png"
+        Label:
+            size_hint: 1.1,1
+            text: str(app.mineral_cobble)
+    FloatLayout:
+        size_hint: 1,1.9
+        Image:
+            source: "icons/col.png"
+        Label:
+            size_hint: 1.1,1
+            text: str(app.mineral_col)
+    FloatLayout:
+        size_hint: 1.2,1.9
+        Image:
+            source: "icons/steel.png"
+        Label:
+            size_hint: 1.1,1
+            text: str(app.mineral_steel)
+    FloatLayout:
+        size_hint: 1.4,1.9
+        Image:
+            source: "icons/gold.png"
+        Label:
+            size_hint: 1.1,1
+            text: str(app.mineral_gold)
     FloatLayout:
         size_hint: .5, 0.2
         BoxLayout:
