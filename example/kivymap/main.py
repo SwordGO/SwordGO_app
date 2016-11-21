@@ -123,7 +123,7 @@ class MapViewApp(App):
         #self.mapview = MapView(zoom=15, lat=kwargs.get('lat'), lon=kwargs.get('lon'))
         self.mapview.center_on(kwargs.get('lat'),kwargs.get('lon'))
         #self.mapview = MapView(zoom=15, lat=37.3251096, lon=127.1250295)
-        self.gps_location += "\n zoom : " + str(kwargs.get('zoom')) + "\n\n\n\n\n\n\n\n\n\n\n\n"
+        
     @mainthread
     def on_status(self, stype, status):
         self.gps_status = 'type={}\n{}'.format(stype, status)
