@@ -87,24 +87,28 @@ class MapViewApp(App):
     error = StringProperty("ERRRRRRRRRRRRRRRRRRRRROOOOOOOOORRRRRR")
     mapview = None
     def build(self):
-        self.root = MapViewBackground()
-        gps.configure(on_location=self.on_location,on_status=self.on_status)
-        self.mapview = self.root.ids.mv
-        response = requests.get(api_url,"")
-            
-        for i in response.json():
-            global markerlist
-            #print "id = %s\tlat,lon = %s,%s\tHP = %s"%(l['idmine'],l['lat'],l['lon'],l['hp'])
-            user_id = requests.get(user_url+"/%(user)s/test"%i,"")
-            user_id = user_id.json()
-            #status2 = user_id.json()['state']
-            #if status2 == "FAIL" : 
-            #    return
-            
-            
-            _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
-            self.mapview.add_widget(_widget)
-            markerlist.append(_widget)
+        try:
+            self.root = MapViewBackground()
+            gps.configure(on_location=self.on_location,on_status=self.on_status)
+            self.mapview = self.root.ids.mv
+            response = requests.get(api_url,"")
+                
+            for i in response.json():
+                global markerlist
+                #print "id = %s\tlat,lon = %s,%s\tHP = %s"%(l['idmine'],l['lat'],l['lon'],l['hp'])
+                user_id = requests.get(user_url+"/%(user)s/test"%i,"")
+                user_id = user_id.json()
+                #status2 = user_id.json()['state']
+                #if status2 == "FAIL" : 
+                #    return
+                
+                
+                _widget = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
+                self.mapview.add_widget(_widget)
+                markerlist.append(_widget)
+            self.start(1000,0)
+        except Exception as e:        
+            self.error = "                             "+str(e)
         return self.root
     
     def start(self, minTime, minDistance):
@@ -119,10 +123,11 @@ class MapViewApp(App):
         #self.mapview = MapView(zoom=15, lat=kwargs.get('lat'), lon=kwargs.get('lon'))
         self.mapview.center_on(kwargs.get('lat'),kwargs.get('lon'))
         #self.mapview = MapView(zoom=15, lat=37.3251096, lon=127.1250295)
-
+        self.gps_location += "\n zoom : " + str(kwargs.get('zoom')) + "\n\n\n\n\n\n\n\n\n\n\n\n"
     @mainthread
     def on_status(self, stype, status):
         self.gps_status = 'type={}\n{}'.format(stype, status)
+        
     
     def makemark(self):
         try:
@@ -166,5 +171,5 @@ class MapViewApp(App):
             else :
                 self.root.popup.open()
         except Exception as e:        
-                self.error = "                     "+str(e)
+                self.error = "                             "+str(e)
 MapViewApp().run()
