@@ -40,6 +40,13 @@ class MapViewer(MapView):
             i.remove_open_status()
         
     pass
+whereami_loader = '''
+MapMarker:
+    lat: %(lat)f
+    lon: %(lon)f
+    source: "icons/mybeacon.png"
+'''    
+    
 marker_loader_ = '''
 MapMarkerPopup:
     lat: %(lat)f
@@ -130,11 +137,16 @@ class MapViewApp(App):
     def stop(self):
         gps.stop()
 
+    beacon = None
     @mainthread
     def on_location(self, **kwargs):
+    
+        if self.beacon: self.beacon.detach()
         self.gps_location = '\n'.join(['{}={}'.format(k, v) for k, v in kwargs.items()])        
         #self.mapview = MapView(zoom=15, lat=kwargs.get('lat'), lon=kwargs.get('lon'))
         self.mapview.center_on(kwargs.get('lat'),kwargs.get('lon'))
+        self.beacon = Builder.load_string(whereami_loader%{"lat":kwargs.get('lat'),"lon":kwargs.get('lon')})
+        self.mapview.add_widget(self.beacon)
         #self.mapview = MapView(zoom=15, lat=37.3251096, lon=127.1250295)
         
     @mainthread
