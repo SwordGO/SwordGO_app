@@ -8,8 +8,8 @@
     MapViewer:
         id: mv
         zoom: 17
-        lat: 37.4251096
-        lon: 127.4250295
+        lat: 37.3206023
+        lon: 127.1286901
     FloatLayout:
         size_hint: 0.8,1.9
         Image:
@@ -48,9 +48,9 @@
                 size_hint: 1.0, 1.0
                 on_release: app.start(1000, 0)
             Button:
-                text: "s"			
+                text: app.error			
                 size_hint: 1.0, 1.0
-                on_release: app.makemark()
+                
             
             Label:
                 text: app.gps_location
