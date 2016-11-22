@@ -4,42 +4,42 @@
 #:import MapView mapview
 
 <MapViewBackground>:
-    popup: popup.__self__
+    popup: popup.__self__    
+    popup2: popup2.__self__ 
+    popup3: popup3.__self__
+    BoxLayout:
+        size_hint_y: 0.1
+        BoxLayout:
+            Image:
+                source: "icons/cobble.png"
+            Label:
+                size_hint: 1.1,1
+                text: str(app.mineral_cobble)
+        BoxLayout:
+            Image:
+                source: "icons/col.png"
+            Label:
+                size_hint: 1.1,1
+                text: str(app.mineral_col)
+        BoxLayout:
+            Image:
+                source: "icons/steel.png"
+            Label:
+                size_hint: 1.1,1
+                text: str(app.mineral_steel)
+        BoxLayout:
+            Image:
+                source: "icons/gold.png"
+            Label:
+                size_hint: 1.1,1
+                text: str(app.mineral_gold)
     MapViewer:
         id: mv
         zoom: 17
         lat: 37.3206023
         lon: 127.1286901
     FloatLayout:
-        size_hint: 0.8,1.9
-        Image:
-            source: "icons/cobble.png"
-        Label:
-            size_hint: 1.1,1
-            text: str(app.mineral_cobble)
-    FloatLayout:
-        size_hint: 1,1.9
-        Image:
-            source: "icons/col.png"
-        Label:
-            size_hint: 1.1,1
-            text: str(app.mineral_col)
-    FloatLayout:
-        size_hint: 1.2,1.9
-        Image:
-            source: "icons/steel.png"
-        Label:
-            size_hint: 1.1,1
-            text: str(app.mineral_steel)
-    FloatLayout:
-        size_hint: 1.4,1.9
-        Image:
-            source: "icons/gold.png"
-        Label:
-            size_hint: 1.1,1
-            text: str(app.mineral_gold)
-    FloatLayout:
-        size_hint: .5, 0.2
+        size_hint: 1, 0.2
         BoxLayout:
             orientation: 'vertical'	
             id:bl
@@ -48,13 +48,28 @@
                 size_hint: 1.0, 1.0
                 on_release: app.start(1000, 0)
             Button:
-                text: app.error			
-                size_hint: 1.0, 1.0             
+                text: str(app.mining_gauge)
+                size_hint: 1.0, 1.0
+                on_release: app.makemark()
             
-            
-            Label:
-                text: app.error
-
+            Popup:
+                id: popup2
+                title: "NOP!"
+                size_hint: (0.5, 0.5)
+                on_parent:
+                    if self.parent == bl: self.parent.remove_widget(self)
+                Button:
+                    text: 'not enough \n minerals.'
+                    on_release: popup2.dismiss()
+            Popup:
+                id: popup3
+                title: "NOP!"
+                size_hint: (0.5, 0.5)
+                on_parent:
+                    if self.parent == bl: self.parent.remove_widget(self)
+                Button:
+                    text: '키비 제작자 애미없음'
+                    on_release: popup3.dismiss()
             Popup:
                 id: popup
                 title: "NOP"
@@ -62,7 +77,7 @@
                 on_parent:
                     if self.parent == bl: self.parent.remove_widget(self)
                 Button:
-                    text: 'nop nop nop'
+                    text: '주변에 이미 \n광산이 존재합니다 !'
                     on_release: popup.dismiss()
                 
             Button:

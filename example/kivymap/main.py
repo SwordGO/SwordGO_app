@@ -11,6 +11,7 @@ from kivy.clock import Clock, mainthread
 from plyer import gps
 import requests
 from kivy.uix.floatlayout import FloatLayout
+from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 
 Label.font_name = "NotoSansCJKkr-Regular.otf"
@@ -21,6 +22,12 @@ user_url = url+"/user"
 inven_url = url+"/inven"
 markerdic = {}
 GL_USER = 1
+GL_REQUIRE_COBBLE = 3
+GL_REQUIRE_COL = 3
+GL_REQUIRE_STEEL = 3
+GL_REQUIRE_GOLD = 3
+
+GL_MINE_DISTANCE = 10
 class MapMark(MapMarkerPopup):
     def remove_open_status(self):
         if self.is_open and self.placeholder.parent:
@@ -68,7 +75,7 @@ MapMark:
                 halign: "center"
 '''
 
-class MapViewBackground(FloatLayout):
+class MapViewBackground(BoxLayout):
     pass
 class MapViewApp(App):
     root = None
@@ -81,20 +88,25 @@ class MapViewApp(App):
     mineral_col = NumericProperty()
     mineral_steel = NumericProperty()
     mineral_gold = NumericProperty()
-    
+    mining_gauge = NumericProperty()
+    is_am_i_in_mine = False
     def build(self):
         try:
-            self.root = MapViewBackground()
+            self.root = MapViewBackground(orientation='vertical')
             gps.configure(on_location=self.on_location,on_status=self.on_status)
-            self.mapview = self.root.ids.mv                
+            self.mapview = self.root.ids.mv     
+            self.mapview.center_on(37.3206023,127.1286901)
             inven_respone = requests.get(inven_url+"/%d/test"%GL_USER,"")
             self.mineral_cobble = inven_respone.json()[0]['cob']
             self.mineral_col = inven_respone.json()[0]['col']
             self.mineral_steel = inven_respone.json()[0]['steel']
             self.mineral_gold = inven_respone.json()[0]['gold']
             self.start(1000,0)
+            self.mining_gauge = 0
+            self.root.popup3.open()
         except Exception as e:        
             self.error = str(e) + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+            print str(e)
         return self.root
     
     def start(self, minTime, minDistance):
@@ -121,7 +133,13 @@ class MapViewApp(App):
                 
                 global markerdic
                 if i['idmine'] in markerdic:
-                    #TODO UPDATE
+                    
+                    
+                    response_idmine = requests.get(api_url+"/%(idmine)d"%i,"")
+                    if int(response_idmine.json()['hp']) is int(0):
+                        self.mapview.remove_widget(markerdic[i['idmine']]) 
+                        self.error = "yes you did it !"
+                    
                     pass
                     
                 else:
@@ -132,31 +150,60 @@ class MapViewApp(App):
                     self.mapview.add_widget(_widget)
                     
                     markerdic[i['idmine']] = _widget
-        
+            response = requests.get(api_url+"/%(lat)f/%(lon)f?around=/%(distance)d"%{'lat':self.mapview.lat,'lon':self.mapview.lon,'distance':GL_MINE_DISTANCE},"")
+            response = response.json()
+            if response :
+                self.is_am_i_in_mine = True
+            else:
+                self.is_am_i_in_mine = False
+            
+            if self.mining_gauge >= 3 :
+                self.mining_gauge = 0
+            else:
+                self.mining_gauge -= 3
+            self.root.popup3.open()
         except Exception as e:        
             self.error = str(e) + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
     @mainthread
     def on_status(self, stype, status):
         self.gps_status = 'type={}\n{}'.format(stype, status)        
-    
+    def makemark(self):
+        try:
+            
+            if self.is_am_i_in_mine :                
+                self.mining_gauge += 4
+            else :
+                self.mining_gauge += 2
+                
+            if self.mining_gauge >= 10 :
+                self.mineral_cobble += 1
+                self.mineral_col += 1
+                self.mineral_steel += 1
+                self.mineral_gold += 1
+                self.mining_gauge = 0   
+        except Exception as e:        
+                self.error = str(e) + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n" 
     def makemark2(self):
         try:
-            response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")
-            response = response.json()
-            if not response:
-                response2 = requests.post(api_url+"/%(lat)f/%(lon)f/test"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")        
-                status = response2.json()['state']
-                if status == "FAIL" : 
-                    return
-                user_id = requests.get(user_url+"/%d/test"%GL_USER,"")
-                user_id = user_id.json()
-                _widget = Builder.load_string(marker_loader%{"lat":self.mapview.lat,"lon":self.mapview.lon,"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
-                self.mapview.add_widget(_widget)
-                
-                
-                markerdic[response2.json()['id']] = _widget
+            if (self.mineral_cobble >= GL_REQUIRE_COBBLE) and (self.mineral_col >= GL_REQUIRE_COL) and (self.mineral_steel >= GL_REQUIRE_STEEL) and (self.mineral_gold >= GL_REQUIRE_GOLD) :                        
+                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")
+                response = response.json()
+                if not response:
+                    response2 = requests.post(api_url+"/%(lat)f/%(lon)f/test"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")        
+                    status = response2.json()['state']
+                    if status == "FAIL" : 
+                        return
+                    user_id = requests.get(user_url+"/%d/test"%GL_USER,"")
+                    user_id = user_id.json()
+                    _widget = Builder.load_string(marker_loader%{"lat":self.mapview.lat,"lon":self.mapview.lon,"source":user_id['team'],"user_name":user_id['name'], "team_name":user_id['team_name']})
+                    self.mapview.add_widget(_widget)
+                    
+                    
+                    markerdic[response2.json()['id']] = _widget
+                else :
+                    self.root.popup.open()
             else :
-                self.root.popup.open()
+                self.root.popup2.open()
         except Exception as e:        
                 self.error = str(e) + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
                 
