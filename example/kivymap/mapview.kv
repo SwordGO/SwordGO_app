@@ -6,7 +6,7 @@
 <MapViewBackground>:
     popup: popup.__self__    
     popup2: popup2.__self__ 
-    popup3: popup3.__self__
+    
     BoxLayout:
         size_hint_y: 0.1
         BoxLayout:
@@ -44,7 +44,7 @@
             orientation: 'vertical'	
             id:bl
             Button:
-                text: "g"			
+                text: app.error
                 size_hint: 1.0, 1.0
                 on_release: app.start(1000, 0)
             Button:
@@ -61,15 +61,7 @@
                 Button:
                     text: 'not enough \n minerals.'
                     on_release: popup2.dismiss()
-            Popup:
-                id: popup3
-                title: "NOP!"
-                size_hint: (0.5, 0.5)
-                on_parent:
-                    if self.parent == bl: self.parent.remove_widget(self)
-                Button:
-                    text: '키비 제작자 애미없음'
-                    on_release: popup3.dismiss()
+            
             Popup:
                 id: popup
                 title: "NOP"
