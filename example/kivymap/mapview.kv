@@ -6,9 +6,9 @@
 <MapViewBackground>:
     popup: popup.__self__    
     popup2: popup2.__self__ 
-    
+        
     BoxLayout:
-        size_hint_y: 0.1
+        size_hint: 1, 0.1
         BoxLayout:
             Image:
                 source: "icons/cobble.png"
@@ -33,14 +33,16 @@
             Label:
                 size_hint: 1.1,1
                 text: str(app.mineral_gold)
-    MapViewer:
-        id: mv
-        zoom: 17
-        lat: 37.3206023
-        lon: 127.1286901
     FloatLayout:
-        size_hint: 1, 0.2
+        MapViewer:
+            id: mv
+            zoom: 17
+            lat: 37.3206023
+            lon: 127.1286901
+
+
         BoxLayout:
+            size_hint_y: .2
             orientation: 'vertical'	
             id:bl
             Button:
@@ -73,5 +75,5 @@
                     on_release: popup.dismiss()
                 
             Button:
-                text: 'make this shit'
-                on_release: app.makemark2()
+                text: 'make mine'
+                on_release: app.makemark2() 

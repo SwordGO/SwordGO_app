@@ -1,10 +1,10 @@
 [app]
 
 # (str) Title of your application
-title = My Application
+title = Gold Rush
 
 # (str) Package name
-package.name = myapp
+package.name = goldrush
 
 # (str) Package domain (needed for android/ios packaging)
 package.domain = org.test
@@ -46,10 +46,10 @@ requirements = kivy,openssl,futures,requests,plyer
 #garden_requirements =
 
 # (str) Presplash of the application
-#presplash.filename = %(source.dir)s/data/presplash.png
+presplash.filename = %(source.dir)s/data/presplash.png
 
 # (str) Icon of the application
-#icon.filename = %(source.dir)s/data/icon.png
+icon.filename = %(source.dir)s/data/icon.png
 
 # (str) Supported orientation (one of landscape, portrait or all)
 orientation = landscape
