@@ -16,6 +16,7 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.label import Label
 from plyer import accelerometer
+from kivy.utils import platform
 import plyer
 
 Label.font_name = "NotoSansCJKkr-Regular.otf"
@@ -87,15 +88,16 @@ MapMark:
             orientation: "horizontal"
             padding: "5dp"
             AsyncImage:
-                source: "http://upload.wikimedia.org/wikipedia/commons/9/9d/France-Lille-VieilleBourse-FacadeGrandPlace.jpg"
+                source: "https://cdn.pixabay.com/photo/2013/07/13/01/23/mining-155645_960_720.png"
                 mipmap: True
             Label:
                 id: texter
-                text: "[b]%(hp)d [/b]%(team_name)s"
+                text: "[b]remain : %(hp)d [/b] \\n%(team_name)s team's mine"
                 markup: True
                 halign: "center"
 '''
-marker_text ='''[b]%(hp)d [/b]%(team_name)s'''
+marker_text ='''[b]remain : %(hp)d [/b] 
+%(team_name)s team's mine'''
 
 class MapViewBackground(BoxLayout):
     pass
@@ -103,7 +105,7 @@ class MapViewApp(App):
     root = None
     gps_location = StringProperty()
     gps_status = StringProperty('Click Start to get GPS location updates')
-    error = StringProperty("there is no error ..")
+    error = StringProperty("Hello there !")
     mapview = None
     is_first_load = True
     mineral_cobble = NumericProperty()
@@ -119,6 +121,11 @@ class MapViewApp(App):
     last_lat = 0.
     last_lon = 0.
     def build(self):
+        if platform == 'android':
+            from android import AndroidService
+            service = AndroidService('Gold Rush', 'running')
+            service.start('service started')
+            self.service = service
         try:
             self.root = MapViewBackground(orientation='vertical')
             gps.configure(on_location=self.on_location,on_status=self.on_status)
@@ -133,9 +140,7 @@ class MapViewApp(App):
                 self.class_user_id = who_respone.json()['iduser']
 
             self.mapview = self.root.ids.mv     
-            self.mapview.center_on(37.3206023,127.1286901)
-            layer = GeoJsonMapLayer(source="https://storage.googleapis.com/maps-devrel/google.json")
-            self.mapview.add_layer(layer)
+            self.mapview.center_on(37.3206023,127.1286901)            
             inven_respone = requests.get(inven_url+"/%d/%s"%(self.class_user_id,plyer.uniqueid.id),"")
             self.mineral_cobble = inven_respone.json()[0]['cob']
             self.mineral_col = inven_respone.json()[0]['col']
@@ -144,7 +149,8 @@ class MapViewApp(App):
             self.start(1000,0)
             self.mining_gauge = 0
             self.sensorEnabled = False            
-            self.do_toggle()            
+            self.do_toggle()
+            self.load_geo()
         except Exception as e:        
             self.error = "build" + str(e)
             
@@ -260,6 +266,11 @@ class MapViewApp(App):
                         
             response = requests.get(api_url+"/%(lat)f/%(lon)f?around=%(distance)d"%{'lat':self.last_lat,'lon':self.last_lon,'distance':GL_MINE_DISTANCE},"")
             response = response.json()
+            inven_respone = requests.get(inven_url+"/%d/%s"%(self.class_user_id,plyer.uniqueid.id),"")
+            self.mineral_cobble = inven_respone.json()[0]['cob']
+            self.mineral_col = inven_respone.json()[0]['col']
+            self.mineral_steel = inven_respone.json()[0]['steel']
+            self.mineral_gold = inven_respone.json()[0]['gold']
             
             for i in response :                    
                 if self.is_mine_dead(i):                     
@@ -268,7 +279,7 @@ class MapViewApp(App):
                 self.is_am_i_in_mine = response[0]['idmine']
             else:
                 self.is_am_i_in_mine = False
-            self.load_geo()
+            self.update_geo()
         except Exception as e:                    
             self.error = "update" + str(e)
                 
@@ -284,57 +295,80 @@ class MapViewApp(App):
             texts += geo_footer
             jsons = json.loads(texts)
             layer = GeoJsonMapLayer(geojson=jsons)
-            if self.old_layer:
-                self.mapview.remove_layer(self.old_layer)
+            #if self.old_layer:
+            #    self.mapview.remove_layer(self.old_layer)
             self.mapview.add_layer(layer)
             self.old_layer = layer
         except Exception as e:                    
             self.error = "geo" +str(e)
-        
+    
+    def update_geo(self):
+        try:
+            respone = requests.get(geo_url,"")
+            texts = geo_header
+            for i in respone.json() :
+                texts += geo_body%(team_color[i['idteam']],i['poly']) 
+                
+                
+            texts = texts[:-1]
+            texts += geo_footer
+            jsons = json.loads(texts)        
+            self.old_layer.geojson = jsons
+        except Exception as e:                    
+            self.error = "update geo" +str(e)    
+    
     def makemark(self):
         try:
             
-            if self.is_am_i_in_mine :                
-                self.mining_gauge += 4
-                # update mine hp
-                response = requests.put(api_url+"/%d/10/%s"%(self.is_am_i_in_mine,plyer.uniqueid.id),"")
+                        
+            self.mining_gauge += 4
                 
-                response = requests.get(api_url+"/%d"%self.is_am_i_in_mine,"")
-                i = response.json()
-                user_id = requests.get(user_url+"/%d/%s"%(i['user'],plyer.uniqueid.id),"")
-                user_id = user_id.json()
-                tmp_widget = markerdic[i['idmine']]
-                self.error = (str(i['lat'])  + str(i['lon']) + str(user_id['team']) + str(i['hp']))
-                #tmp_widget.ids.texter.text = "ddd"# = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']})
-                tmp_widget.ids.texter.text = marker_text%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']}
-
-            else :
-                self.mining_gauge += 2
+                
+            # update mine hp
+                
+            
                 
             if self.mining_gauge >= 100 :
+            
+                if self.is_am_i_in_mine :            
+                    
+                    
+                    response = requests.put(api_url+"/%d/10/%s"%(self.is_am_i_in_mine,plyer.uniqueid.id),"")                
+                    response = requests.get(api_url+"/%d"%self.is_am_i_in_mine,"")
+                    i = response.json()
+                    user_id = requests.get(user_url+"/%d/%s"%(i['user'],plyer.uniqueid.id),"")
+                    user_id = user_id.json()
+                    tmp_widget = markerdic[i['idmine']]
+                    #self.error = (str(i['lat'])  + str(i['lon']) + str(user_id['team']) + str(i['hp']))
+                    #tmp_widget.ids.texter.text = "ddd"# = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']})
+                    tmp_widget.ids.texter.text = marker_text%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']}
+                    adder = 2
+                else :
+                    adder = 1
+                    
+                self.mineral_cobble += adder
+                self.mineral_col += adder
+                self.mineral_steel += adder
+                self.mineral_gold += adder
                 
-                self.mineral_cobble += 1
-                self.mineral_col += 1
-                self.mineral_steel += 1
-                self.mineral_gold += 1
-                self.mining_gauge = 0
-                
-                response = requests.put("http://build.ees.guru:8888/inven/%d/cob/%s?num=1"%(self.class_user_id,plyer.uniqueid.id),"")
+                response = requests.put("http://build.ees.guru:8888/inven/%d/cob/%s?num=%d"%(self.class_user_id,plyer.uniqueid.id,adder),"")
                 status = response.json()['state']
                 if status == "FAIL" : 
                     return
-                response = requests.put("http://build.ees.guru:8888/inven/%d/col/%s?num=1"%(self.class_user_id,plyer.uniqueid.id),"")
+                response = requests.put("http://build.ees.guru:8888/inven/%d/col/%s?num=%d"%(self.class_user_id,plyer.uniqueid.id,adder),"")
                 status = response.json()['state']
                 if status == "FAIL" : 
                     return
-                response = requests.put("http://build.ees.guru:8888/inven/%d/steel/%s?num=1"%(self.class_user_id,plyer.uniqueid.id),"")
+                response = requests.put("http://build.ees.guru:8888/inven/%d/steel/%s?num=%d"%(self.class_user_id,plyer.uniqueid.id,adder),"")
                 status = response.json()['state']
                 if status == "FAIL" : 
                     return
-                response = requests.put("http://build.ees.guru:8888/inven/%d/gold/%s?num=1"%(self.class_user_id,plyer.uniqueid.id),"")
+                response = requests.put("http://build.ees.guru:8888/inven/%d/gold/%s?num=%d"%(self.class_user_id,plyer.uniqueid.id,adder),"")
                 status = response.json()['state']
                 if status == "FAIL" : 
                     return
+                        
+                self.mining_gauge = 0        
                 self.update_all()
                 
         except Exception as e:        
@@ -342,6 +376,9 @@ class MapViewApp(App):
                 pass
     def makemark2(self):
         try:
+        
+            
+            
             if (self.mineral_cobble >= GL_REQUIRE_COBBLE) and (self.mineral_col >= GL_REQUIRE_COL) and (self.mineral_steel >= GL_REQUIRE_STEEL) and (self.mineral_gold >= GL_REQUIRE_GOLD) :                        
                 response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")
                 response = response.json()
@@ -387,4 +424,5 @@ class MapViewApp(App):
         except Exception as e:        
                 self.error = str(e) + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
                 
-MapViewApp().run()
+if __name__ == '__main__':                
+    MapViewApp().run()
