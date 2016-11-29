@@ -90,10 +90,12 @@ MapMark:
                 source: "http://upload.wikimedia.org/wikipedia/commons/9/9d/France-Lille-VieilleBourse-FacadeGrandPlace.jpg"
                 mipmap: True
             Label:
+                id: texter
                 text: "[b]%(hp)d [/b]%(team_name)s"
                 markup: True
                 halign: "center"
 '''
+marker_text ='''[b]%(hp)d [/b]%(team_name)s'''
 
 class MapViewBackground(BoxLayout):
     pass
@@ -101,7 +103,7 @@ class MapViewApp(App):
     root = None
     gps_location = StringProperty()
     gps_status = StringProperty('Click Start to get GPS location updates')
-    error = StringProperty("ERRRRRRRRRRRRRRRRRRRRROOOOOOOOORRRRRR")
+    error = StringProperty("there is no error ..")
     mapview = None
     is_first_load = True
     mineral_cobble = NumericProperty()
@@ -114,8 +116,8 @@ class MapViewApp(App):
     last_val = None
     old_layer = None
     class_user_id = NumericProperty() 
-    #last_lat = NumericProperty() 
-    #last_lon = NumericProperty() 
+    last_lat = 0.
+    last_lon = 0.
     def build(self):
         try:
             self.root = MapViewBackground(orientation='vertical')
@@ -185,7 +187,7 @@ class MapViewApp(App):
     
     def is_mine_dead(self, mine):
         try:
-            if mine and (int(mine['hp']) is int(0)):
+            if mine and (int(mine['hp']) <= int(0)):
                 return True
             else:
                 return False 
@@ -195,21 +197,35 @@ class MapViewApp(App):
     beacon = None
     @mainthread
     def on_location(self, **kwargs):
-        try:
-            self.load_geo()
+        try:            
             if self.beacon: self.beacon.detach()
             self.gps_location = '\n'.join(['{}={}'.format(k, v) for k, v in kwargs.items()])                
             self.mapview.center_on(kwargs.get('lat'),kwargs.get('lon'))
             self.beacon = Builder.load_string(whereami_loader%{"lat":kwargs.get('lat'),"lon":kwargs.get('lon')})
-            #self.last_lat = kwargs.get('lat')
-            #self.last_lon = kwargs.get('lon')
+            self.last_lat = kwargs.get('lat')
+            self.last_lon = kwargs.get('lon')
             self.mapview.add_widget(self.beacon)
+            self.update_all()   
+            if self.mining_gauge <= 3 :
+                self.mining_gauge = 0
+            else:
+                self.mining_gauge -= 3
             
+        except Exception as e:                    
+            self.error = "location" + str(e)
+    @mainthread
+    def on_status(self, stype, status):
+        self.gps_status = 'type={}\n{}'.format(stype, status)
+        
+    def update_all(self):
+    
+        try:
+        
             if self.is_first_load : 
-                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=1000"%{"lat":self.mapview.lat,"lon":self.mapview.lon },"")
+                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=1000"%{"lat":self.last_lat,"lon":self.last_lon },"")
                 self.is_first_load = False
             else : 
-                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=100"%{"lat":self.mapview.lat,"lon":self.mapview.lon },"")
+                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=100"%{"lat":self.last_lat,"lon":self.last_lon },"")
             
             for i in response.json():
                 
@@ -222,6 +238,16 @@ class MapViewApp(App):
                     if self.is_mine_dead(response_idmine.json()):
                         tmp = markerdic[i['idmine']]
                         self.mapview.remove_widget(tmp)
+                    
+                    if markerdic[i['idmine']] :
+                        user_id = requests.get(user_url+"/%s/%s"%(i['user'],plyer.uniqueid.id),"")
+                        user_id = user_id.json()
+                        tmp_widget = markerdic[i['idmine']]                        
+                        tmp_widget.ids.texter.text = marker_text%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']}
+
+                        
+                        #Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']})
+                        #ddd
                         
                 else:
                     
@@ -232,26 +258,20 @@ class MapViewApp(App):
                         self.mapview.add_widget(_widget)                        
                         markerdic[i['idmine']] = _widget
                         
-            response = requests.get(api_url+"/%(lat)f/%(lon)f?around=%(distance)d"%{'lat':self.mapview.lat,'lon':self.mapview.lon,'distance':GL_MINE_DISTANCE},"")
+            response = requests.get(api_url+"/%(lat)f/%(lon)f?around=%(distance)d"%{'lat':self.last_lat,'lon':self.last_lon,'distance':GL_MINE_DISTANCE},"")
             response = response.json()
             
             for i in response :                    
                 if self.is_mine_dead(i):                     
                     response.remove(i)                    
             if response :
-                self.is_am_i_in_mine = True
+                self.is_am_i_in_mine = response[0]['idmine']
             else:
-                self.is_am_i_in_mine = False            
-            if self.mining_gauge <= 3 :
-                self.mining_gauge = 0
-            else:
-                self.mining_gauge -= 3
-            
+                self.is_am_i_in_mine = False
+            self.load_geo()
         except Exception as e:                    
-            self.error = "location" + str(e)
-    @mainthread
-    def on_status(self, stype, status):
-        self.gps_status = 'type={}\n{}'.format(stype, status)
+            self.error = "update" + str(e)
+                
     def load_geo(self):
         try:
             respone = requests.get(geo_url,"")
@@ -276,6 +296,18 @@ class MapViewApp(App):
             
             if self.is_am_i_in_mine :                
                 self.mining_gauge += 4
+                # update mine hp
+                response = requests.put(api_url+"/%d/10/%s"%(self.is_am_i_in_mine,plyer.uniqueid.id),"")
+                
+                response = requests.get(api_url+"/%d"%self.is_am_i_in_mine,"")
+                i = response.json()
+                user_id = requests.get(user_url+"/%d/%s"%(i['user'],plyer.uniqueid.id),"")
+                user_id = user_id.json()
+                tmp_widget = markerdic[i['idmine']]
+                self.error = (str(i['lat'])  + str(i['lon']) + str(user_id['team']) + str(i['hp']))
+                #tmp_widget.ids.texter.text = "ddd"# = Builder.load_string(marker_loader%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']})
+                tmp_widget.ids.texter.text = marker_text%{"lat":i['lat'],"lon":i['lon'],"source":user_id['team'],"hp":i['hp'], "team_name":user_id['team_name']}
+
             else :
                 self.mining_gauge += 2
                 
@@ -303,8 +335,11 @@ class MapViewApp(App):
                 status = response.json()['state']
                 if status == "FAIL" : 
                     return
+                self.update_all()
+                
         except Exception as e:        
                 self.error = str(e) 
+                pass
     def makemark2(self):
         try:
             if (self.mineral_cobble >= GL_REQUIRE_COBBLE) and (self.mineral_col >= GL_REQUIRE_COL) and (self.mineral_steel >= GL_REQUIRE_STEEL) and (self.mineral_gold >= GL_REQUIRE_GOLD) :                        
@@ -315,7 +350,7 @@ class MapViewApp(App):
                     if self.is_mine_dead(i):                    
                         response.remove(i)
                 if not response:
-                    response2 = requests.post(api_url+"/%(lat)f/%(lon)f/%s"%{'lat':self.mapview.lat,'lon':self.mapview.lon},plyer.uniqueid.id,"")        
+                    response2 = requests.post(api_url+"/%(lat)f/%(lon)f/%(id)s"%{'lat':self.mapview.lat,'lon':self.mapview.lon,'id':plyer.uniqueid.id},"")        
                     status = response2.json()['state']
                     if status == "FAIL" : 
                         return
@@ -344,6 +379,7 @@ class MapViewApp(App):
                     status = response.json()['state']
                     if status == "FAIL" : 
                         return
+                    self.update_all()
                 else :
                     self.root.popup.open()
             else :
