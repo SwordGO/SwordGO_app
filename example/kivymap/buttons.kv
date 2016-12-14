@@ -1,0 +1,23 @@
+#:kivy 1.0
+
+<buttons>:
+	
+	BoxLayout:
+
+		orientation: 'vertical'
+		padding: 20
+		spacing: 100		
+		Button:
+			text: "go my place"
+			pos_hint: {'x':0.4, 'y': 0.1}
+			size_hint: 0.5, 0.5
+            on_release: app.start(1000, 0)
+		Button:
+			text: "mk marker"
+			pos_hint: {'x':0.4, 'y': 0.1}
+			size_hint: 0.5, 0.5
+			on_release: app.stop()
+        Label:
+            text: app.gps_location
+        Label:
+            text: app.gps_status
