@@ -380,20 +380,20 @@ class MapViewApp(App):
             
             
             if (self.mineral_cobble >= GL_REQUIRE_COBBLE) and (self.mineral_col >= GL_REQUIRE_COL) and (self.mineral_steel >= GL_REQUIRE_STEEL) and (self.mineral_gold >= GL_REQUIRE_GOLD) :                        
-                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.mapview.lat,'lon':self.mapview.lon},"")
+                response = requests.get(api_url+"/%(lat)f/%(lon)f?around=50"%{'lat':self.last_lat,'lon':self.last_lon},"")
                 response = response.json()
                 for i in response :
                     
                     if self.is_mine_dead(i):                    
                         response.remove(i)
                 if not response:
-                    response2 = requests.post(api_url+"/%(lat)f/%(lon)f/%(id)s"%{'lat':self.mapview.lat,'lon':self.mapview.lon,'id':plyer.uniqueid.id},"")        
+                    response2 = requests.post(api_url+"/%(lat)f/%(lon)f/%(id)s"%{'lat':self.last_lat,'lon':self.last_lon,'id':plyer.uniqueid.id},"")        
                     status = response2.json()['state']
                     if status == "FAIL" : 
                         return
                     user_id = requests.get(user_url+"/%d/%s"%(self.class_user_id,plyer.uniqueid.id),"")
                     user_id = user_id.json()
-                    _widget = Builder.load_string(marker_loader%{"lat":self.mapview.lat,"lon":self.mapview.lon,"source":user_id['team'],"hp":1000, "team_name":user_id['team_name']})
+                    _widget = Builder.load_string(marker_loader%{"lat":self.last_lat,"lon":self.last_lon,"source":user_id['team'],"hp":1000, "team_name":user_id['team_name']})
                     self.mapview.add_widget(_widget)
                     markerdic[response2.json()['id']] = _widget
                     self.mineral_cobble -= GL_REQUIRE_COBBLE
